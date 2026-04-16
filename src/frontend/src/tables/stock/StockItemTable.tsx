@@ -9,6 +9,7 @@ import { ModelType } from '@lib/enums/ModelType';
 import { UserRoles } from '@lib/enums/Roles';
 import { apiUrl } from '@lib/functions/Api';
 import { getDetailUrl } from '@lib/functions/Navigation';
+import useTable from '@lib/hooks/UseTable';
 import type { TableFilter } from '@lib/types/Filters';
 import type { StockOperationProps } from '@lib/types/Forms';
 import type { TableColumn } from '@lib/types/Tables';
@@ -18,12 +19,12 @@ import { useStockFields } from '../../forms/StockForms';
 import { InvenTreeIcon } from '../../functions/icons';
 import { useCreateApiFormModal } from '../../hooks/UseForm';
 import { useStockAdjustActions } from '../../hooks/UseStockAdjustActions';
-import { useTable } from '../../hooks/UseTable';
 import { useGlobalSettingsState } from '../../states/SettingsStates';
 import { useUserState } from '../../states/UserState';
 import {
   DateColumn,
   DescriptionColumn,
+  IPNColumn,
   LocationColumn,
   PartColumn,
   StatusColumn,
@@ -59,12 +60,7 @@ function stockItemTableColumns({
       accessor: 'part',
       part: 'part_detail'
     }),
-    {
-      accessor: 'part_detail.IPN',
-      title: t`IPN`,
-      sortable: true,
-      ordering: 'IPN'
-    },
+    IPNColumn({}),
     {
       accessor: 'part_detail.revision',
       title: t`Revision`,
@@ -83,7 +79,8 @@ function stockItemTableColumns({
     StatusColumn({ model: ModelType.stockitem }),
     {
       accessor: 'batch',
-      sortable: true
+      sortable: true,
+      copyable: true
     },
     LocationColumn({
       hidden: !showLocation,
@@ -101,13 +98,15 @@ function stockItemTableColumns({
       accessor: 'SKU',
       title: t`Supplier Part`,
       sortable: true,
-      defaultVisible: false
+      defaultVisible: false,
+      copyable: true
     },
     {
       accessor: 'MPN',
       title: t`Manufacturer Part`,
       sortable: true,
-      defaultVisible: false
+      defaultVisible: false,
+      copyable: true
     },
     {
       accessor: 'purchase_price',
@@ -315,6 +314,8 @@ export function StockItemTable({
   showLocation = true,
   showPricing = true,
   allowReturn = false,
+  initialFilters,
+  defaultInStock = true,
   tableName = 'stockitems'
 }: Readonly<{
   params?: any;
@@ -322,9 +323,34 @@ export function StockItemTable({
   showLocation?: boolean;
   showPricing?: boolean;
   allowReturn?: boolean;
+  defaultInStock?: boolean | null;
+  initialFilters?: TableFilter[];
   tableName: string;
 }>) {
-  const table = useTable(tableName);
+  const initialStockFilters: TableFilter[] = useMemo(() => {
+    if (!!initialFilters) {
+      return initialFilters;
+    }
+
+    const filters: TableFilter[] = [];
+
+    // Optionally set the default "in_stock" filter
+    // Typically, we default to only displaying "in_stock" items,
+    // but this can be overridden by the caller if required
+    if (defaultInStock != undefined && defaultInStock != null) {
+      filters.push({
+        name: 'in_stock',
+        value: defaultInStock ? 'true' : 'false'
+      });
+    }
+
+    return filters;
+  }, [defaultInStock, initialFilters]);
+
+  const table = useTable(tableName, {
+    initialFilters: initialStockFilters
+  });
+
   const user = useUserState();
 
   const settings = useGlobalSettingsState();
@@ -391,7 +417,8 @@ export function StockItemTable({
       // Navigate to the first result
       navigate(getDetailUrl(ModelType.stockitem, response[0].pk));
     },
-    successMessage: t`Stock item serialized`
+    successMessage: t`Stock item created`,
+    keepOpenOption: true
   });
 
   const [partsToOrder, setPartsToOrder] = useState<any[]>([]);
@@ -402,7 +429,8 @@ export function StockItemTable({
 
   const stockAdjustActions = useStockAdjustActions({
     formProps: stockOperationProps,
-    return: allowReturn
+    return: allowReturn,
+    changeBatch: true
   });
 
   const tableActions = useMemo(() => {

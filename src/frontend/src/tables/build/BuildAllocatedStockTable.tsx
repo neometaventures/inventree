@@ -6,6 +6,7 @@ import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
 import { UserRoles } from '@lib/enums/Roles';
 import { apiUrl } from '@lib/functions/Api';
+import useTable from '@lib/hooks/UseTable';
 import { ActionButton, formatDecimal } from '@lib/index';
 import type { TableFilter } from '@lib/types/Filters';
 import type { StockOperationProps } from '@lib/types/Forms';
@@ -13,15 +14,16 @@ import type { TableColumn } from '@lib/types/Tables';
 import { Alert } from '@mantine/core';
 import { IconCircleDashedCheck, IconCircleX } from '@tabler/icons-react';
 import { useConsumeBuildItemsForm } from '../../forms/BuildForms';
+import useBackgroundTask from '../../hooks/UseBackgroundTask';
 import {
   useDeleteApiFormModal,
   useEditApiFormModal
 } from '../../hooks/UseForm';
 import { useStockAdjustActions } from '../../hooks/UseStockAdjustActions';
-import { useTable } from '../../hooks/UseTable';
 import { useUserState } from '../../states/UserState';
 import {
   DecimalColumn,
+  IPNColumn,
   LocationColumn,
   PartColumn,
   ReferenceColumn,
@@ -99,14 +101,9 @@ export default function BuildAllocatedStockTable({
         hidden: !showPartInfo,
         switchable: false
       }),
-      {
-        accessor: 'part_detail.IPN',
-        ordering: 'IPN',
-        hidden: !showPartInfo,
-        title: t`IPN`,
-        sortable: true,
-        switchable: true
-      },
+      IPNColumn({
+        hidden: !showPartInfo
+      }),
       {
         hidden: !showPartInfo,
         accessor: 'bom_reference',
@@ -119,7 +116,9 @@ export default function BuildAllocatedStockTable({
         title: t`Batch Code`,
         sortable: false,
         switchable: true,
-        render: (record: any) => record?.stock_item_detail?.batch
+        render: (record: any) => record?.stock_item_detail?.batch,
+        copyable: true,
+        copyAccessor: 'stock_item_detail.batch'
       },
       DecimalColumn({
         accessor: 'stock_item_detail.quantity',
@@ -152,7 +151,9 @@ export default function BuildAllocatedStockTable({
         accessor: 'sku',
         title: t`Supplier Part`,
         render: (record: any) => record?.supplier_part_detail?.SKU,
-        sortable: true
+        sortable: true,
+        copyable: true,
+        copyAccessor: 'supplier_part_detail.SKU'
       }
     ];
   }, []);
@@ -191,12 +192,28 @@ export default function BuildAllocatedStockTable({
     return selectedItems.filter((item) => !item.part_detail?.trackable);
   }, [selectedItems]);
 
+  const [consumeTaskId, setConsumeTaskId] = useState<string>('');
+
+  useBackgroundTask({
+    taskId: consumeTaskId,
+    message: t`Consuming allocated stock`,
+    successMessage: t`Stock consumed successfully`,
+    onSuccess: () => {
+      table.refreshTable();
+    }
+  });
+
   const consumeStock = useConsumeBuildItemsForm({
     buildId: buildId ?? 0,
     allocatedItems: itemsToConsume,
-    onFormSuccess: () => {
+    onFormSuccess: (response: any) => {
       table.clearSelectedRecords();
-      table.refreshTable();
+
+      if (response.task_id) {
+        setConsumeTaskId(response.task_id);
+      } else {
+        table.refreshTable();
+      }
     }
   });
 

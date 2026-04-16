@@ -5,16 +5,17 @@ import { useCallback, useMemo, useState } from 'react';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
 import { apiUrl } from '@lib/functions/Api';
+import useTable from '@lib/hooks/UseTable';
 import { RowEditAction, UserRoles } from '@lib/index';
 import type { TableFilter } from '@lib/types/Filters';
 import type { RowAction, TableColumn } from '@lib/types/Tables';
 import { formatDecimal } from '../../defaults/formatters';
 import { bomItemFields } from '../../forms/BomForms';
 import { useEditApiFormModal } from '../../hooks/UseForm';
-import { useTable } from '../../hooks/UseTable';
 import { useUserState } from '../../states/UserState';
 import {
   DescriptionColumn,
+  IPNColumn,
   PartColumn,
   ReferenceColumn
 } from '../ColumnRenderers';
@@ -40,11 +41,9 @@ export function UsedInTable({
         title: t`Assembly`,
         part: 'part_detail'
       }),
-      {
-        accessor: 'part_detail.IPN',
-        sortable: false,
-        title: t`IPN`
-      },
+      IPNColumn({
+        sortable: false
+      }),
       {
         accessor: 'part_detail.revision',
         title: t`Revision`,

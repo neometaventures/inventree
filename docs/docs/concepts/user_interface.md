@@ -224,6 +224,8 @@ Example: Creating a new part via the "Add Part" form:
 
 {{ image("concepts/ui_form_add_part.png", "Add Part Button") }}
 
+On several forms is displayed option "Keep form open" in bottom part of the form on left side of Submit button (option is visible on the screenshot above). When this switch is turned on, form window is not closed after submit and filled form data is not reset. This is useful for creating more entries at one time with similar properties (e.g. only different number in name).
+
 ### Data Editing
 
 Example: Editing an existing purchase order via the "Edit Purchase Order" form:
@@ -280,14 +282,23 @@ Alternatively, the spotlight search can be opened using the keyboard shortcut `C
 
 Users may opt to disable the spotlight search functionality if they do not find it useful or prefer not to use it. To disable the spotlight search, navigate to your [user settings](../settings/user.md) and locate the option to disable the spotlight feature. Once disabled, the spotlight search will no longer be accessible from the main menu or via keyboard shortcuts.
 
-## Barcode Scanning
+## Copy Button
 
-## Notifications
+Many fields within the InvenTree user interface include a "copy" button, which allows users to quickly copy the value of that field to their clipboard. This is particularly useful for fields that contain important identifiers, such as part numbers, stock item codes, or other relevant data that may need to be easily copied and pasted elsewhere.
 
-## Customization
+!!! important "Secure Context"
+    The "copy" button functionality relies on the browser's clipboard API, which may not be available in all contexts (e.g. if the user is accessing the InvenTree interface via a non-https connection, or through an embedded iframe or a non-standard browser). In such cases, the "copy" button may not function as intended.
 
 ## User Permissions
 
 Many aspects of the user interface are controlled by user permissions, which determine what actions and features are available to each user based on their assigned roles and permissions within the system. This allows for a highly customizable user experience, where different users can have access to different features and functionality based on their specific needs and responsibilities within the organization.
 
 If a user does not have permission to access a particular feature or section of the system, that feature will be hidden from their view in the user interface. This helps to ensure that users only see the features and information that are relevant to their role, reducing clutter and improving usability.
+
+## Language Support
+
+The InvenTree user interface supports multiple languages, allowing users to interact with the system in their preferred language.
+
+The default system language can be configured by the system administrator in the [server configuration options](../start/config.md#basic-options).
+
+Additionally, users can select their preferred language in their [user settings](../settings/user.md), allowing them to override the system default language with their own choice. This provides a personalized experience for each user, ensuring that they can interact with the system in the language they are most comfortable with.

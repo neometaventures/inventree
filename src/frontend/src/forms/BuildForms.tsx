@@ -226,6 +226,31 @@ export function useBuildOrderOutputFields({
   }, [quantity, batchGenerator.result, serialGenerator.result, trackable]);
 }
 
+export function useBuildAutoAllocateFields({
+  item_type
+}: {
+  item_type: 'all' | 'tracked' | 'untracked';
+}): ApiFormFieldSet {
+  return useMemo(() => {
+    return {
+      location: {},
+      exclude_location: {},
+      item_type: {
+        value: item_type,
+        hidden: true
+      },
+      interchangeable: {
+        hidden: item_type === 'tracked'
+      },
+      substitutes: {},
+      optional_items: {
+        hidden: item_type === 'tracked',
+        value: item_type === 'tracked' ? false : undefined
+      }
+    };
+  }, [item_type]);
+}
+
 function BuildOutputFormRow({
   props,
   record,
@@ -716,6 +741,7 @@ export function useAllocateStockToBuildForm({
     preFormContent: preFormContent,
     successMessage: t`Stock items allocated`,
     onFormSuccess: onFormSuccess,
+    keepOpenOption: true,
     initialData: {
       items: lineItems
         .filter((item) => {
@@ -828,7 +854,7 @@ export function useConsumeBuildItemsForm({
     url: ApiEndpoints.build_order_consume,
     pk: buildId,
     title: t`Consume Stock`,
-    successMessage: t`Stock items scheduled to be consumed`,
+    successMessage: null,
     onFormSuccess: onFormSuccess,
     size: '80%',
     fields: consumeFields,
@@ -929,7 +955,7 @@ export function useConsumeBuildLinesForm({
     url: ApiEndpoints.build_order_consume,
     pk: buildId,
     title: t`Consume Stock`,
-    successMessage: t`Stock items scheduled to be consumed`,
+    successMessage: null,
     onFormSuccess: onFormSuccess,
     fields: consumeFields,
     initialData: {
